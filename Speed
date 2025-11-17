@@ -1,0 +1,37 @@
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+
+local frame = script.Parent
+
+local increaseBtn = frame.IncreaseButton
+local decreaseBtn = frame.DecreaseButton
+local speedLabel  = frame.SpeedLabel
+
+local minSpeed = 8
+local maxSpeed = 200
+local currentSpeed = 16 -- เริ่มต้น
+
+-- อัปเดตความเร็วในเกมและใน Label
+local function updateSpeed()
+    humanoid.WalkSpeed = currentSpeed
+    speedLabel.Text = "Speed: " .. currentSpeed
+end
+
+updateSpeed()
+
+-- ปุ่มเพิ่มความเร็ว
+increaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeed < maxSpeed then
+        currentSpeed = currentSpeed + 5
+        updateSpeed()
+    end
+end)
+
+-- ปุ่มลดความเร็ว
+decreaseBtn.MouseButton1Click:Connect(function()
+    if currentSpeed > minSpeed then
+        currentSpeed = currentSpeed - 5
+        updateSpeed()
+    end
+end)

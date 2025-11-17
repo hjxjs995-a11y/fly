@@ -1,0 +1,41 @@
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
+
+local frame = script.Parent
+local toggleBtn = frame.ToggleFly
+local increaseBtn = frame.IncreaseSpeed
+local decreaseBtn = frame.DecreaseSpeed
+local speedLabel = frame.SpeedLabel
+
+local flying = false
+local flySpeed = 50       -- ความเร็วตอนเริ่มบิน
+local minSpeed = 10
+local maxSpeed = 300
+
+local bodyVelocity = nil
+
+-- อัปเดตข้อความความเร็ว
+local function updateSpeedText()
+    speedLabel.Text = "Fly Speed: " .. flySpeed
+end
+
+updateSpeedText()
+
+-- เปิด/ปิดโหมดบิน
+toggleBtn.MouseButton1Click:Connect(function()
+    flying = not flying
+
+    if flying then
+        toggleBtn.Text = "Fly: ON"
+
+        -- เปิดฟิสิกส์ช่วยบิน
+        bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bodyVelocity.Parent = root
+
+        -- ลูปขับเคลื่อนการบิน
+        task.spawn(function()
+            while flying

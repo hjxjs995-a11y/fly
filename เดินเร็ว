@@ -1,0 +1,19 @@
+local button = script.Parent
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local normalSpeed = 16
+local fastSpeed = 32
+local isFast = false
+
+button.MouseButton1Click:Connect(function()
+	isFast = not isFast
+	if isFast then
+		humanoid.WalkSpeed = fastSpeed
+		button.Text = "Speed: ON"
+	else
+		humanoid.WalkSpeed = normalSpeed
+		button.Text = "Speed: OFF"
+	end
+end)

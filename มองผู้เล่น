@@ -1,0 +1,177 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+local enabled = false
+local visuals = {}
+
+-- 🔥 ปรับระยะ (ใส่ math.huge = ไม่จำกัด)
+local MAX_DISTANCE = math.huge
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui")
+gui.Name = "FarVisionGUI"
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 140)
+frame.Position = UDim2.new(0, 50, 0, 100)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Active = true
+frame.Draggable = true
+Instance.new("UICorner", frame)
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.BackgroundTransparency = 1
+title.Text = "Far Player Vision"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+
+local toggleBtn = Instance.new("TextButton", frame)
+toggleBtn.Size = UDim2.new(0.8,0,0,40)
+toggleBtn.Position = UDim2.new(0.1,0,0.45,0)
+toggleBtn.Text = "OFF"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", toggleBtn)
+
+-- 🔘 ปุ่มซ่อน GUI
+local hideBtn = Instance.new("TextButton", frame)
+hideBtn.Size = UDim2.new(0.3,0,0,25)
+hideBtn.Position = UDim2.new(0.35,0,0.8,0)
+hideBtn.Text = "HIDE"
+hideBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+hideBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", hideBtn)
+
+-- 🔘 ปุ่มเปิด GUI (ตอนซ่อน)
+local openBtn = Instance.new("TextButton", gui)
+openBtn.Size = UDim2.new(0,80,0,30)
+openBtn.Position = UDim2.new(0,10,0,10)
+openBtn.Text = "OPEN"
+openBtn.Visible = false
+openBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+
+-- ===== สร้าง ESP =====
+local function createVisual(plr, char)
+	if plr == player then return end
+	if visuals[plr] then return end
+
+	local root = char:FindFirstChild("HumanoidRootPart")
+	local head = char:FindFirstChild("Head")
+	if not root or not head then return end
+
+	-- 🔥 Highlight (มองทะลุ)
+	local h = Instance.new("Highlight")
+	h.FillColor = Color3.fromRGB(255,0,0)
+	h.OutlineColor = Color3.new(1,1,1)
+	h.FillTransparency = 0.3
+	h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop -- สำคัญ
+	h.Parent = char
+
+	-- 🔥 NameTag
+	local bill = Instance.new("BillboardGui")
+	bill.Size = UDim2.new(0, 140, 0, 40)
+	bill.StudsOffset = Vector3.new(0, 3, 0)
+	bill.AlwaysOnTop = true
+	bill.Adornee = head
+	bill.Parent = char
+
+	local text = Instance.new("TextLabel", bill)
+	text.Size = UDim2.new(1,0,1,0)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = Color3.new(1,1,1)
+	text.TextStrokeTransparency = 0
+	text.Font = Enum.Font.GothamBold
+	text.TextScaled = true
+
+	visuals[plr] = {
+		Highlight = h,
+		Name = text,
+		Root = root
+	}
+end
+
+-- ===== ลบ =====
+local function clearAll()
+	for _, v in pairs(visuals) do
+		if v.Highlight then v.Highlight:Destroy() end
+		if v.Name and v.Name.Parent then v.Name.Parent:Destroy() end
+	end
+	visuals = {}
+end
+
+-- ===== อัปเดต =====
+RunService.RenderStepped:Connect(function()
+	if not enabled then return end
+	
+	local myChar = player.Character
+	if not myChar then return end
+	
+	local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+	if not myRoot then return end
+
+	for plr, v in pairs(visuals) do
+		if plr.Character and v.Root then
+			local dist = (myRoot.Position - v.Root.Position).Magnitude
+			
+			if dist <= MAX_DISTANCE then
+				v.Name.Text = plr.Name .. " | " .. math.floor(dist) .. "m"
+				v.Highlight.Enabled = true
+				v.Name.Parent.Enabled = true
+			else
+				v.Highlight.Enabled = false
+				v.Name.Parent.Enabled = false
+			end
+		end
+	end
+end)
+
+-- ===== โหลดผู้เล่น =====
+local function apply()
+	clearAll()
+	
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= player then
+			if plr.Character then
+				createVisual(plr, plr.Character)
+			end
+			
+			plr.CharacterAdded:Connect(function(char)
+				task.wait(1)
+				if enabled then
+					createVisual(plr, char)
+				end
+			end)
+		end
+	end
+end
+
+-- ===== ปุ่มเปิด/ปิด =====
+toggleBtn.MouseButton1Click:Connect(function()
+	enabled = not enabled
+	
+	if enabled then
+		toggleBtn.Text = "ON"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+		apply()
+	else
+		toggleBtn.Text = "OFF"
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+		clearAll()
+	end
+end)
+
+-- ===== ซ่อน GUI =====
+hideBtn.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	openBtn.Visible = true
+end)
+
+openBtn.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	openBtn.Visible = false
+end)

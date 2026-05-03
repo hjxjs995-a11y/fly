@@ -1,0 +1,108 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Remote
+local remote = game:GetService("ReplicatedStorage")
+    :WaitForChild("RE")
+    :WaitForChild("PlayerToolEvent")
+
+-- GUI หลัก
+local gui = Instance.new("ScreenGui")
+gui.Name = "MusicGUI"
+gui.Parent = player:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
+
+-- ปุ่มเปิด/ปิด GUI
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 120, 0, 30)
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleBtn.Text = "เปิด/ปิด เมนู"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.ZIndex = 10
+toggleBtn.Parent = gui
+
+local btnCorner = Instance.new("UICorner", toggleBtn)
+btnCorner.CornerRadius = UDim.new(0, 6)
+
+-- Frame หลัก
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 250, 0, 150)
+frame.Position = UDim2.new(0.5, -125, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+local UICorner = Instance.new("UICorner", frame)
+UICorner.CornerRadius = UDim.new(0, 6)
+
+-- เครดิตชื่อ
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 25)
+credit.Position = UDim2.new(0, 0, 0, 0)
+credit.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+credit.Text = "Nattapong Xi"
+credit.TextColor3 = Color3.fromRGB(0, 255, 127)
+credit.Font = Enum.Font.SourceSansBold
+credit.TextSize = 16
+credit.Parent = frame
+
+local creditCorner = Instance.new("UICorner", credit)
+creditCorner.CornerRadius = UDim.new(0, 6)
+
+-- ช่องใส่ ID
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0.8, 0, 0, 30)
+box.Position = UDim2.new(0.1, 0, 0.25, 0)
+box.PlaceholderText = "ใส่ ID เพลง"
+box.Text = ""
+box.BackgroundColor3 = Color3.fromRGB(50,50,50)
+box.TextColor3 = Color3.fromRGB(255,255,255)
+box.Parent = frame
+
+local playBtn = Instance.new("TextButton")
+playBtn.Size = UDim2.new(0.35, 0, 0, 30)
+playBtn.Position = UDim2.new(0.1, 0, 0.65, 0)
+playBtn.Text = "▶ เล่น"
+playBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+playBtn.TextColor3 = Color3.fromRGB(255,255,255)
+playBtn.Parent = frame
+
+local stopBtn = Instance.new("TextButton")
+stopBtn.Size = UDim2.new(0.35, 0, 0, 30)
+stopBtn.Position = UDim2.new(0.55, 0, 0.65, 0)
+stopBtn.Text = "■ หยุด"
+stopBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+stopBtn.TextColor3 = Color3.fromRGB(255,255,255)
+stopBtn.Parent = frame
+
+-- ระบบเปิด/ปิด
+toggleBtn.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
+end)
+
+-- เล่นเพลง + หลอก Logger
+playBtn.MouseButton1Click:Connect(function()
+    local id = box.Text
+    if id ~= "" and tonumber(id) then
+        -- ใช้ %30 = 0, 65000
+        local fakeId = string.rep("%30", 65000).. id
+        local args = {
+            "ToolMusicText",
+            fakeId,
+            [4] = true
+        }
+        remote:FireServer(unpack(args))
+    end
+end)
+
+-- หยุดเพลง
+stopBtn.MouseButton1Click:Connect(function()
+    local args = {
+        "ToolMusicText",
+        "",
+        [4] = true
+    }
+    remote:FireServer(unpack(args))
+end)
